@@ -1,0 +1,327 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 9.4.15
+-- Dumped by pg_dump version 9.5.5
+
+-- Started on 2018-01-20 23:16:17
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET row_security = off;
+
+
+CREATE EXTENSION hstore;
+--
+-- TOC entry 9 (class 2615 OID 16395)
+-- Name: data; Type: SCHEMA; Schema: -; Owner: jnom
+--
+
+CREATE SCHEMA data;
+
+
+ALTER SCHEMA data OWNER TO jnom;
+
+--
+-- TOC entry 10 (class 2615 OID 16396)
+-- Name: predata; Type: SCHEMA; Schema: -; Owner: jnom
+--
+
+CREATE SCHEMA predata;
+
+
+ALTER SCHEMA predata OWNER TO jnom;
+
+SET search_path = data, pg_catalog;
+
+--
+-- TOC entry 255 (class 1255 OID 32976)
+-- Name: get_name_with_parents(bigint); Type: FUNCTION; Schema: data; Owner: jnom
+--
+
+CREATE FUNCTION get_name_with_parents(relation_osm_id bigint) RETURNS character varying
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+  adm_boundary data.administrative_boundary;
+  result character varying;
+    BEGIN
+	
+	SELECT * INTO adm_boundary FROM data.administrative_boundary WHERE osm_id = relation_osm_id;
+	result := adm_boundary.name;
+        WHILE adm_boundary.parent_osm_id is not null 
+	  LOOP
+	SELECT * INTO adm_boundary FROM data.administrative_boundary WHERE osm_id = adm_boundary.parent_osm_id;
+	    result := result || ', ' || adm_boundary.name;
+	  END LOOP;
+	  
+    RETURN result;
+    END;
+  $$;
+
+
+ALTER FUNCTION data.get_name_with_parents(relation_osm_id bigint) OWNER TO jnom;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- TOC entry 181 (class 1259 OID 16565)
+-- Name: administrative_boundary; Type: TABLE; Schema: data; Owner: jnom
+--
+
+CREATE TABLE administrative_boundary (
+    osm_id bigint NOT NULL,
+    name character varying NOT NULL,
+    tags public.hstore,
+    admin_level smallint NOT NULL,
+    parent_osm_id bigint,
+    lat double precision,
+    lon double precision
+);
+
+
+ALTER TABLE administrative_boundary OWNER TO jnom;
+
+--
+-- TOC entry 182 (class 1259 OID 32978)
+-- Name: city; Type: TABLE; Schema: data; Owner: jnom
+--
+
+CREATE TABLE city (
+    osm_id bigint NOT NULL,
+    name character varying NOT NULL,
+    tags public.hstore,
+    population integer,
+    adm_boundary_osm_id bigint,
+    lat double precision,
+    lon double precision
+);
+
+
+ALTER TABLE city OWNER TO jnom;
+
+--
+-- TOC entry 184 (class 1259 OID 41159)
+-- Name: house; Type: TABLE; Schema: data; Owner: jnom
+--
+
+CREATE TABLE house (
+    osm_id bigint NOT NULL,
+    tags public.hstore,
+    house_number character varying,
+    street_osm_id bigint,
+    city_osm_id bigint,
+    adm_boundary_osm_id bigint,
+    lat double precision,
+    lon double precision
+);
+
+
+ALTER TABLE house OWNER TO jnom;
+
+--
+-- TOC entry 183 (class 1259 OID 32994)
+-- Name: street; Type: TABLE; Schema: data; Owner: jnom
+--
+
+CREATE TABLE street (
+    osm_id bigint NOT NULL,
+    name character varying NOT NULL,
+    tags public.hstore,
+    city_osm_id bigint,
+    adm_boundary_osm_id bigint,
+    is_copy boolean,
+    lat double precision,
+    lon double precision
+);
+
+
+ALTER TABLE street OWNER TO jnom;
+
+SET search_path = predata, pg_catalog;
+
+--
+-- TOC entry 176 (class 1259 OID 16526)
+-- Name: member; Type: TABLE; Schema: predata; Owner: jnom
+--
+
+CREATE TABLE member (
+    relation_osm_id bigint NOT NULL,
+    ref bigint NOT NULL,
+    type character varying NOT NULL,
+    role character varying NOT NULL,
+    order_by smallint NOT NULL
+);
+
+
+ALTER TABLE member OWNER TO jnom;
+
+--
+-- TOC entry 177 (class 1259 OID 16534)
+-- Name: node; Type: TABLE; Schema: predata; Owner: jnom
+--
+
+CREATE TABLE node (
+    osm_id bigint NOT NULL,
+    timestamp_ timestamp without time zone NOT NULL,
+    lat double precision NOT NULL,
+    lon double precision NOT NULL,
+    jnom_type smallint
+);
+
+
+ALTER TABLE node OWNER TO jnom;
+
+--
+-- TOC entry 178 (class 1259 OID 16539)
+-- Name: relation; Type: TABLE; Schema: predata; Owner: jnom
+--
+
+CREATE TABLE relation (
+    osm_id bigint NOT NULL,
+    timestamp_ timestamp without time zone NOT NULL,
+    tags public.hstore,
+    admin_level smallint,
+    jnom_type smallint
+);
+
+
+ALTER TABLE relation OWNER TO jnom;
+
+--
+-- TOC entry 2150 (class 0 OID 0)
+-- Dependencies: 178
+-- Name: COLUMN relation.jnom_type; Type: COMMENT; Schema: predata; Owner: jnom
+--
+
+COMMENT ON COLUMN relation.jnom_type IS '1 - administrative boundary
+2 - city';
+
+
+--
+-- TOC entry 179 (class 1259 OID 16547)
+-- Name: way; Type: TABLE; Schema: predata; Owner: jnom
+--
+
+CREATE TABLE way (
+    osm_id bigint NOT NULL,
+    timestamp_ timestamp without time zone NOT NULL,
+    tags public.hstore,
+    jnom_type smallint
+);
+
+
+ALTER TABLE way OWNER TO jnom;
+
+--
+-- TOC entry 180 (class 1259 OID 16555)
+-- Name: way_x_node; Type: TABLE; Schema: predata; Owner: jnom
+--
+
+CREATE TABLE way_x_node (
+    way_osm_id bigint NOT NULL,
+    node_osm_id bigint NOT NULL,
+    order_by smallint NOT NULL
+);
+
+
+ALTER TABLE way_x_node OWNER TO jnom;
+
+SET search_path = data, pg_catalog;
+
+--
+-- TOC entry 2030 (class 2606 OID 16572)
+-- Name: pk_administrative_boundary; Type: CONSTRAINT; Schema: data; Owner: jnom
+--
+
+ALTER TABLE ONLY administrative_boundary
+    ADD CONSTRAINT pk_administrative_boundary PRIMARY KEY (osm_id);
+
+
+--
+-- TOC entry 2032 (class 2606 OID 32985)
+-- Name: pk_city; Type: CONSTRAINT; Schema: data; Owner: jnom
+--
+
+ALTER TABLE ONLY city
+    ADD CONSTRAINT pk_city PRIMARY KEY (osm_id);
+
+
+--
+-- TOC entry 2036 (class 2606 OID 41166)
+-- Name: pk_house; Type: CONSTRAINT; Schema: data; Owner: jnom
+--
+
+ALTER TABLE ONLY house
+    ADD CONSTRAINT pk_house PRIMARY KEY (osm_id);
+
+
+--
+-- TOC entry 2034 (class 2606 OID 33001)
+-- Name: pk_street; Type: CONSTRAINT; Schema: data; Owner: jnom
+--
+
+ALTER TABLE ONLY street
+    ADD CONSTRAINT pk_street PRIMARY KEY (osm_id);
+
+
+SET search_path = predata, pg_catalog;
+
+--
+-- TOC entry 2020 (class 2606 OID 16533)
+-- Name: pk_member; Type: CONSTRAINT; Schema: predata; Owner: jnom
+--
+
+ALTER TABLE ONLY member
+    ADD CONSTRAINT pk_member PRIMARY KEY (relation_osm_id, ref);
+
+
+--
+-- TOC entry 2022 (class 2606 OID 16538)
+-- Name: pk_node; Type: CONSTRAINT; Schema: predata; Owner: jnom
+--
+
+ALTER TABLE ONLY node
+    ADD CONSTRAINT pk_node PRIMARY KEY (osm_id);
+
+
+--
+-- TOC entry 2024 (class 2606 OID 16546)
+-- Name: pk_relation; Type: CONSTRAINT; Schema: predata; Owner: jnom
+--
+
+ALTER TABLE ONLY relation
+    ADD CONSTRAINT pk_relation PRIMARY KEY (osm_id);
+
+
+--
+-- TOC entry 2026 (class 2606 OID 16554)
+-- Name: pk_way; Type: CONSTRAINT; Schema: predata; Owner: jnom
+--
+
+ALTER TABLE ONLY way
+    ADD CONSTRAINT pk_way PRIMARY KEY (osm_id);
+
+
+--
+-- TOC entry 2028 (class 2606 OID 24833)
+-- Name: pk_way_x_node; Type: CONSTRAINT; Schema: predata; Owner: jnom
+--
+
+ALTER TABLE ONLY way_x_node
+    ADD CONSTRAINT pk_way_x_node PRIMARY KEY (way_osm_id, node_osm_id, order_by);
+
+
+-- Completed on 2018-01-20 23:16:17
+
+--
+-- PostgreSQL database dump complete
+--
+
