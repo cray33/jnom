@@ -14,14 +14,16 @@ public class Application {
     public static void main(String[] args) throws SQLException {
         ApplicationContext context = SpringApplication.run(Application.class, args);
         LoadPreDataService loadPreDataService = context.getBean(LoadPreDataService.class);
-        if (args[0].equals("load_full") || args[0].equals("load_pre_data")) {
-           loadPreDataService.loadPreData(true, args[1]);
-        }
+        if (args.length > 0) {
+            if ("load_full".equals(args[0]) || "load_pre_data".equals(args[0])) {
+               loadPreDataService.loadPreData(true, args[1]);
+            }
 
 
-        LoadDataService loadDataService = context.getBean(LoadDataService.class);
-        if (args[0].equals("load_full") || args[0].equals("load_data")) {
-            loadDataService.handleData();
+            LoadDataService loadDataService = context.getBean(LoadDataService.class);
+            if ("load_full".equals(args[0]) || "load_data".equals(args[0])) {
+                loadDataService.handleData();
+            }
         }
     }
 
