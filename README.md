@@ -3,6 +3,8 @@
 ### This project is needed for obtaining a normalized database of addresses from the openstreetmap data.
 OSM data must be in the .osm format.
 
+Search page: http://jnom.fvds.ru:8080/searchbox.html?
+
 ## Database
 You should have a postgresql database.
 DB properties are located in the resources/application.properties file.
