@@ -1,0 +1,38 @@
+version: '2'
+
+services:
+  jnom-db:
+    image: 'jnom-db:latest'
+    build:
+      context: db/.
+    container_name: jnom-db
+    environment:
+      - POSTGRES_DB=jnom
+      - POSTGRES_USER=jnom
+      - POSTGRES_PASSWORD=jnom
+    volumes:
+      - jnom-postgres-data:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U jnom']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  jnom-app:
+    image: 'jnom-app:latest'
+    build:
+      context: app/.
+    container_name: jnom-app
+    depends_on:
+      jnom-db:
+        condition: service_healthy
+    ports:
+      - 8080:8080
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://jnom-db:5432/jnom
+      - SPRING_DATASOURCE_USERNAME=jnom
+      - SPRING_DATASOURCE_PASSWORD=jnom
+volumes:
+  jnom-postgres-data:
+    driver: local

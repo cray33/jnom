@@ -1,33 +1,22 @@
 package my.home.jnom.controller;
 
-import my.home.jnom.data.dao.AdmBoundaryDAO;
-import my.home.jnom.data.dao.CityDAO;
-import my.home.jnom.data.dao.HouseDAO;
-import my.home.jnom.data.dao.StreetDAO;
-import my.home.jnom.data.entity.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import my.home.jnom.dao.jnom.CityDAO;
+import my.home.jnom.dao.jnom.HouseDAO;
+import my.home.jnom.dao.jnom.StreetDAO;
+import my.home.jnom.entity.CityEntity;
+import my.home.jnom.entity.HouseEntity;
+import my.home.jnom.entity.StreetEntity;
+import my.home.jnom.service.ImportDataService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Павел
- * Date: 01.01.18
- * Time: 1:43
- * To change this template use File | Settings | File Templates.
- */
+
 @RestController
+@RequestMapping("/rest")
 public class MyRestController {
-    private static final Logger LOG = LoggerFactory.getLogger(MyRestController.class);
-
-   @Autowired
-   private AdmBoundaryDAO admBoundaryDAO;
-
     @Autowired
     private CityDAO cityDAO;
 
@@ -37,30 +26,33 @@ public class MyRestController {
     @Autowired
     private HouseDAO houseDAO;
 
-    @RequestMapping("/rest/getCity.json")
-    public List<CityOrAdmBoundaryEntity> getCities(@RequestParam(value="q") String query) {
-        List<CityOrAdmBoundaryEntity> result = admBoundaryDAO.findAdmBoundaries(query);
-        result.addAll(cityDAO.findCities(query));
+    @Autowired
+    private ImportDataService importDataService;
 
-        return result;
+    @GetMapping("/cities")
+    public List<CityEntity> getCities(@RequestParam(value="q") String query) {
+        return cityDAO.findCities(query);
     }
 
-    @RequestMapping("/rest/getStreets.json")
-    public List<StreetEntity> getStreets(@RequestParam(value="admBoundaryOsmId") Long admBoundaryOsmId,
+    @GetMapping("/streets")
+    public List<StreetEntity> getStreets(@RequestParam(value="cityId") Long cityId,
                                          @RequestParam(value="q") String query) {
-        List<StreetEntity> result = streetDAO.findStreets(admBoundaryOsmId, query);
+        List<StreetEntity> result = streetDAO.findStreetsFormatName(cityId, query);
 
         return result;
     }
 
-    @RequestMapping("/rest/getHouses.json")
-    public List<HouseEntity> getHouses(@RequestParam(value="admBoundaryOsmId") Long admBoundaryOsmId,
-                                        @RequestParam(value="cityOsmId") Long cityOsmId,
-                                        @RequestParam(value="streetOsmId") Long streetOsmId,
-                                         @RequestParam(value="q") String query) {
-        List<HouseEntity> result = houseDAO.findHouses(admBoundaryOsmId, cityOsmId, streetOsmId, query);
+    @GetMapping("/houses")
+    public List<HouseEntity> getHouses( @RequestParam(value="cityOsmId") Long cityOsmId,
+                                       @RequestParam(value="streetId") UUID streetId,
+                                       @RequestParam(value="q") String query) {
+        List<HouseEntity> result = houseDAO.findHouses(cityOsmId, streetId, query);
 
         return result;
     }
 
+    @GetMapping("/startImport")
+    public void startImport() {
+        importDataService.importData();
+    }
 }

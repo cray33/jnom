@@ -1,53 +1,52 @@
 # jnom
 
-### This project is needed for obtaining a normalized database of addresses from the openstreetmap data.
-OSM data must be in the .osm format.
+### This is a project for getting a normalized hierarchical database of postal addresses from [OSM](https://www.openstreetmap.org/) data
+You can see an example of search page with result data here: http://jnom.fvds.ru:8080/searchbox.html?
 
-Search page: http://jnom.fvds.ru:8080/searchbox.html?
+This application has been written in the Java language.
+It also uses [PostgreSQL](https://www.postgresql.org) database, [PostGIS](https://postgis.net) extension, [osm2pgsql](https://osm2pgsql.org) converter.
 
-## Database
-You should have a postgresql database.
-DB properties are located in the resources/application.properties file.
-`spring.datasource.url=jdbc:postgresql://localhost:5433/jnom` <br>
-`spring.datasource.username=jnom`<br>
-`spring.datasource.password=123`
+The process consist of two steps
+1. Loading an OSM data to a database by osm2pgsql
+2. Processing this data and converting it to a normalized database
 
-### Creation of the database
-1. Create a user "jnom". For example <br>
-`CREATE ROLE jnom LOGIN
-  ENCRYPTED PASSWORD 'md5a39ad10977270b24fdfc54c5d3e90a8b'
-  NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;` <br>
-  It will create a user "jnom" with password "jnom"
-2. Create a database, for example "jnom". Pay attention to LC_COLLATE and LC_CTYPE. They should be set for your native language.<br>
-  For example <br>
-  `CREATE DATABASE jnom
-  WITH OWNER = jnom
-       ENCODING = 'UTF8'
-       TABLESPACE = pg_default
-       LC_COLLATE = 'Russian_Russia.1251'
-       LC_CTYPE = 'Russian_Russia.1251'
-       CONNECTION LIMIT = -1;`
-3. Run sql script for this database from resources/schema.sql
+There are two variants of executing this application.
+1. By the [Docker](https://www.docker.com) ([Docker Desktop](https://www.docker.com/products/docker-desktop/) for window)
+2. Or by manual installing all the environment
 
-## OSM data
-Download .bz2 file from this page: http://gis-lab.info/projects/osm_dump/. Unpack it
+### Docker
+1. You need to have Docker installed on your computer
+2. Download OSM data of the region you needed. The bigger region - the more space it requires, the longer it processed.
+      There are two services which allow you to download OSM data https://download.geofabrik.de and https://download.bbbike.org/osm/
+      The format of the result file should be .pbf
+3. Copy the "install" directory of the project to you computer
+4. Put the downloaded .pbf file to the "install/db/"
+5. If there is any other .pbf file - delete it
+6. Execute the "docker-compose up -d" command in the console in the "install" directory
+7. If everything is ok - open the "http://localhost:8080" url. You should see a page with input fields and a map
+8. Congratulations, the service has been started. 
+   Now, you should import OSM data to the database. 
+   Execute command "docker-compose exec jnom-db osm2pgsql -c -s /osm_pbf/osm.pbf --database=jnom --username=jnom --middle-schema=osm --output-pgsql-schema=osm --hstore"
+   is the console in the "install" directory. The process could take o lot of time.
+9. Open the page "http://localhost:8080/rest/startImport". It will start the converting process 
+   to normalized form. 
+10. When it ends - then you would be able to search you addresses via form in the http://localhost:8080.
+   The data will be in the "jnom" schema in the database. The login/password to access the database is jnom/jnom. The port is 5433
 
-## Launch:
-java -jar ...target/jnom-0.1.jar [0] [1]
-* [0] can be:
-   * load_pre_data - load a preliminary data
-   * load_data - from preliminary to normal data
-   * load_full - preliminary and normal data
-   * start - just launch project, without data importing 
-* [1] should be a path to the osm data. For example G:\Pavel\Java\jNom\RU-UD.osm
-    If you want only to launch projectm without importing, you can do not set this parameter
-    
-### Examples:
-* java -jar ...target/jnom-0.1.jar load_pre_data G:\Pavel\Java\jNom\RU-UD.osm
-   * load a preliminary data
-* java -jar ...target/jnom-0.1.jar load_data G:\Pavel\Java\jNom\RU-UD.osm
-  * from preliminary to normal data
-* java -jar ...target/jnom-0.1.jar load_full G:\Pavel\Java\jNom\RU-UD.osm
-  * full load
-* java -jar ...target/jnom-0.1.jar
-  * just launch project, without data importing 
+### Without Docker
+1. Install the postgresql
+2. Install the PostGIS extension
+3. Install the osm2pgsql
+4. Start the installed postgresql
+5. Create a user "jnom" and create a database "jnom"
+6. Execute the sql script, located in the "/install/db/schema.sql"
+7. Copy a .pbf file to any directory, for example "/osm_pbf/osm.pbf"
+8. Execute osm2pgsql by following command
+   osm2pgsql -c -s <pbf_file> --database=jnom --username=jnom --middle-schema=osm --output-pgsql-schema=osm --hstore
+9. You need to have installed java jre
+10. Copy the jnom.jar file from "install/app/jnom.jar"
+11. Start the application by following command: java -jar <jar_file> -Dspring.datasource.url=jdbc:postgresql://localhost:5433/jnom -Dspring.datasource.username=jnom -Dspring.datasource.password=jnom
+    You can set your port, username or password to the database if you need
+12. When app starts, go to the http://localhost:8080/rest/startImport page. It will start the converting process
+13. hen it ends - then you would be able to search you addresses via form in the http://localhost:8080.
+    The data will be in the "jnom" schema in the database.
