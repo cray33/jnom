@@ -1,7 +1,7 @@
 # jnom
 
 ### This is a project for getting a normalized hierarchical database of postal addresses from [OSM](https://www.openstreetmap.org/) data
-You can see an example of search page with result data here: http://jnom.fvds.ru:8080/searchbox.html?
+You can see an example of search page with result data here: http://jnom.fvds.ru:8080?
 
 This application has been written in the Java language.
 It also uses [PostgreSQL](https://www.postgresql.org) database, [PostGIS](https://postgis.net) extension, [osm2pgsql](https://osm2pgsql.org) converter.
