@@ -1,6 +1,6 @@
 package my.home.jnom.dao.osm;
 
-import my.home.jnom.dao.DatabaseTest;
+import my.home.jnom.DatabaseTest;
 import my.home.jnom.entity.StreetEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -190,14 +190,37 @@ public class OsmLineDAOTest extends DatabaseTest {
 
         assertThat(admBoundaryId).isPresent().hasValue(3841886290L);
     }
-    /*
-     List<Long> result = namedParameterJdbcTemplate.query("SELECT adm.osm_id " +
-                " FROM planet_osm_line street\n" +
-                " INNER JOIN planet_osm_polygon adm on ST_Within(street.way, adm.way) or ST_Crosses(street.way, street.way)\n" +
-                " WHERE street.osm_id = :osmId AND adm.osm_id IN (:admBoundaries) \n" +
-                " ORDER BY adm.admin_level DESC " +
-                " LIMIT 1", parameters, (rs, rowNum) -> rs.getLong("osm_id"));
-     */
+
+    @Test
+    public void findAllLinesInTheStreetSuccess() {
+        jdbcTemplate.update("INSERT INTO osm.planet_osm_line(osm_id, name, way) VALUES (?, ?," +
+                "ST_GeomFromEWKT('SRID=3857;LINESTRING (5924231.162576911 7729374.615983587, 5924213.574097365 7729371.582829598," +
+                " 5924061.277902011 7729345.302331217, 5923962.236951052 7729328.202752757, 5923792.485859541 7729298.909635522, " +
+                "5923784.036710191 7729297.443964786, 5923774.107011612 7729295.734015956, 5923675.533602514 7729278.736331187," +
+                " 5923642.950387559 7729273.097586653)'))",
+                154198077L, "Красногеройская улица");
+        jdbcTemplate.update("INSERT INTO osm.planet_osm_line(osm_id, name, way) VALUES (?, ?, " +
+                "ST_GeomFromEWKT('SRID=3857;LINESTRING (5924966.327626058 7729522.244508434, 5924942.894873246 7729517.725225432," +
+                " 5924849.954230383 7729498.141696715, 5924741.606969994 7729475.301095859, 5924729.2059787195 7729471.779333729," +
+                " 5924715.090667287 7729469.01078198, 5924249.719536026 7729378.483765586, 5924231.162576911 7729374.615983587)'))",
+                 106395366L, "Красногеройская улица");
+        jdbcTemplate.update("INSERT INTO osm.planet_osm_line(osm_id, name, way) VALUES (?, ?, " +
+                        "ST_GeomFromEWKT('SRID=3857;LINESTRING (5925407.620351461 7729690.070591922, " +
+                        "5925665.224785106 7729733.41201404, 5925704.331322222 7729739.9875543, 5925748.95930608 7729734.246679827)'))",
+                345244017L, "Красногеройская улица");
+        jdbcTemplate.update("INSERT INTO osm.planet_osm_line(osm_id, name, way) VALUES (?, ?, " +
+                        "ST_GeomFromEWKT('SRID=3857;LINESTRING (5924970.580030606 7729609.943558093, 5925014.250666845 7729618.188297831, " +
+                        "5925019.660794097 7729619.226524956, 5925051.1753419405 7729625.170886857, 5925160.068067835 7729645.731900462, " +
+                        "5925203.772099921 7729653.997036414, 5925312.586902171 7729674.558127818, 5925344.613519671 7729679.851091021, " +
+                        "5925407.620351461 7729690.070591922)'))",
+                104295849L, "Университетская улица");
+
+        List<Long> consistOf = osmLineDAO.findAllLinesInTheStreet(154198077L, "Красногеройская улица");
+
+        assertThat(consistOf)
+                .containsExactlyInAnyOrder(154198077L, 106395366L, 345244017L)
+                .doesNotContain(104295849L);
+    }
 
     private void insertToOsmLine(Long osmId, String highway, String name) {
         jdbcTemplate.update("INSERT INTO osm.planet_osm_line(osm_id, highway, name, way) " +

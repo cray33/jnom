@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,17 +25,17 @@ public class StreetDAO {
 
         if (isExist) {
             jdbcTemplate.update("UPDATE jnom.street\n" +
-                    "   SET osm_id=?, name=?, city_osm_id=?, adm_boundary_osm_id=?, lat=?, lon=?, way_length=? \n" +
+                    "   SET osm_id=?, name=?, city_osm_id=?, adm_boundary_osm_id=?, lat=?, lon=?, way_length=?, consist_of=? \n" +
                     " WHERE name=? AND city_osm_id=? AND adm_boundary_osm_id = ? AND way_length < ?",
                     entity.getOsmId(), entity.getName(), entity.getCityOsmId(), entity.getAdmBoundaryOsmId(),
-                    entity.getLat(), entity.getLon(), entity.getWayLength(),
+                    entity.getLat(), entity.getLon(), entity.getWayLength(), entity.getConsistOfOsmIds().toArray(new Long[0]),
                     entity.getName(), entity.getCityOsmId(),entity.getAdmBoundaryOsmId(), entity.getWayLength());
         } else {
             jdbcTemplate.update("INSERT INTO jnom.street(\n" +
-                    "            id, osm_id, name, city_osm_id, adm_boundary_osm_id, lat, lon, way_length)\n" +
-                    "    VALUES (?, ?, ?, ?, ?, ?, ?, ?); ",
+                    "            id, osm_id, name, city_osm_id, adm_boundary_osm_id, lat, lon, way_length, consist_of)\n" +
+                    "    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?); ",
                     entity.getId(), entity.getOsmId(), entity.getName(), entity.getCityOsmId(), entity.getAdmBoundaryOsmId(),
-                    entity.getLat(), entity.getLon(), entity.getWayLength());
+                    entity.getLat(), entity.getLon(), entity.getWayLength(), entity.getConsistOfOsmIds().toArray(new Long[0]));
         }
 
     }
@@ -50,6 +51,8 @@ public class StreetDAO {
                     entity.setName(rs.getString("name"));
                     entity.setLat(rs.getDouble("lat"));
                     entity.setLon(rs.getDouble("lon"));
+                    //entity.setWay((PGgeometry) rs.getObject("way"));
+                    entity.setConsistOfOsmIds(Arrays.asList((Long[]) rs.getArray("consist_of").getArray()));
                     return entity;
                 }, cityOsmId, streetName);
     }

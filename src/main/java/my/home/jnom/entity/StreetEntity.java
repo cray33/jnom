@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.postgis.PGgeometry;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -20,6 +22,8 @@ public class StreetEntity {
     private Float wayLength;
 
     private PGgeometry way;
+
+    private List<Long> consistOfOsmIds = new ArrayList<>();
 
     public StreetEntity() {
         id = UUID.randomUUID();

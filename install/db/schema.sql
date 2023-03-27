@@ -39,6 +39,7 @@ CREATE TABLE jnom.street (
 	lon float8 NULL,
 	way_length float8 NULL,
 	way geometry NULL,
+	consist_of bigint[],
 	CONSTRAINT street_pk PRIMARY KEY (id),
 	CONSTRAINT street_un UNIQUE (name, city_osm_id, adm_boundary_osm_id)
 );

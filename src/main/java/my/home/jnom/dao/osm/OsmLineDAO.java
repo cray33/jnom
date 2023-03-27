@@ -65,4 +65,19 @@ public class OsmLineDAO {
 
         return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
     }
+
+    public List<Long> findAllLinesInTheStreet(Long lineOsmId, String streetName) {
+        SqlParameterSource parameters = new MapSqlParameterSource()
+                .addValue("lineOsmId", lineOsmId)
+                .addValue("streetName", streetName);
+
+        return namedParameterJdbcTemplate.query("WITH RECURSIVE lines AS ( " +
+                " SELECT line1.osm_id, line1.way FROM osm.planet_osm_line line1 WHERE line1.osm_id = :lineOsmId " +
+                " UNION " +
+                " SELECT line2.osm_id, line2.way from osm.planet_osm_line line2 " +
+                " INNER JOIN lines line3 ON  ST_DWithin(line2.way, line3.way, 2000) " +
+                " WHERE line2.\"name\" = :streetName " +
+                " ) SELECT * FROM lines;",
+                parameters, (rs, rowNum) -> rs.getLong("osm_id"));
+    }
 }
