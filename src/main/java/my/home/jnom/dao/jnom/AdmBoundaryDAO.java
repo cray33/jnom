@@ -1,21 +1,21 @@
 package my.home.jnom.dao.jnom;
 
+import lombok.AllArgsConstructor;
 import my.home.jnom.entity.AdmBoundaryEntity;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
+@AllArgsConstructor
 public class AdmBoundaryDAO {
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public List<Long> findAllOsmIds(Integer maxAdminLevel) {
         return jdbcTemplate.query("SELECT osm_id " +
                 " FROM jnom.administrative_boundary " +
-                " WHERE admin_level < ?", (rs, rowNum) -> rs.getLong("osm_id"), maxAdminLevel);
+                " WHERE admin_level <= ?", (rs, rowNum) -> rs.getLong("osm_id"), maxAdminLevel);
     }
 
     public void insertOfUpdate(AdmBoundaryEntity entity) {

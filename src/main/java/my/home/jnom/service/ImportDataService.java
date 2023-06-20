@@ -1,40 +1,33 @@
 package my.home.jnom.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class ImportDataService {
-
-    @Autowired
-    private AdmBoundaryDataService admBoundaryDataService;
-
-    @Autowired
-    private CityDataService cityDataService;
-
-    @Autowired
-    private StreetDataService streetDataService;
-
-    @Autowired
-    private HouseDataService houseDataService;
+    private AdmBoundaryService admBoundaryService;
+    private CityService cityService;
+    private StreetService streetService;
+    private HouseService houseService;
 
     public void importData() {
-        log.info("The import of administration boundaries is started");
-        admBoundaryDataService.importAdmBoundaries();
+        log.info("The import of administration boundaries has started");
+        admBoundaryService.importAdmBoundaries();
         log.info("Done.");
 
-        log.info("The import of cities is started");
-        cityDataService.importCities();
+        log.info("The import of cities has started");
+        cityService.importCities();
         log.info("Done.");
 
-        log.info("The import of streets is started");
-        streetDataService.importStreets();
+        log.info("The import of streets has started");
+        streetService.importStreets();
         log.info("Done.");
 
-        log.info("The import of houses is started");
-        houseDataService.importHouses();
+        log.info("The import of houses has started");
+        houseService.importHouses();
         log.info("Done.");
 
     }

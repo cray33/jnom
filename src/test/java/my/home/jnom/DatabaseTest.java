@@ -1,42 +1,22 @@
 package my.home.jnom;
 
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.support.TestPropertySourceUtils;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 
-@Testcontainers
-@ContextConfiguration(initializers = DatabaseTest.DataSourceInitializer.class)
+@Import(TestDatabaseConfiguration.class)
 public abstract class DatabaseTest {
-    @Container
-    protected static final PostgreSQLContainer database;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
-    static {
-        DockerImageName image = DockerImageName.parse("postgis/postgis:13-3.3-alpine")
-                .asCompatibleSubstituteFor("postgres");
-        database = new PostgreSQLContainer(image);
-        database.withUsername("jnom");
-        database.withPassword("jnom");
-        database.withInitScript("schema.sql");
-        database.withDatabaseName("jnom");
-        database.start();
-    }
-
-    public static class DataSourceInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
-        @Override
-        public void initialize(ConfigurableApplicationContext applicationContext) {
-            TestPropertySourceUtils.addInlinedPropertiesToEnvironment(
-                    applicationContext,
-                    "spring.test.database.replace=none",
-                    "spring.datasource.url=" + database.getJdbcUrl(),
-                    "spring.datasource.username=" + database.getUsername(),
-                    "spring.datasource.password=" + database.getPassword()
-            );
-        }
+    @AfterEach
+    public void clear() {
+        jdbcTemplate.update("DELETE FROM osm.planet_osm_line");
+        jdbcTemplate.update("DELETE FROM osm.planet_osm_polygon");
+        jdbcTemplate.update("DELETE FROM jnom.house");
+        jdbcTemplate.update("DELETE FROM jnom.street");
+        jdbcTemplate.update("DELETE FROM jnom.city");
+        jdbcTemplate.update("DELETE FROM jnom.administrative_boundary");
     }
 }

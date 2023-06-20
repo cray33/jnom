@@ -1,13 +1,13 @@
 package my.home.jnom.controller;
 
-import my.home.jnom.dao.jnom.CityDAO;
-import my.home.jnom.dao.jnom.HouseDAO;
-import my.home.jnom.dao.jnom.StreetDAO;
+import lombok.AllArgsConstructor;
 import my.home.jnom.entity.CityEntity;
 import my.home.jnom.entity.HouseEntity;
 import my.home.jnom.entity.StreetEntity;
+import my.home.jnom.service.CityService;
+import my.home.jnom.service.HouseService;
 import my.home.jnom.service.ImportDataService;
-import org.springframework.beans.factory.annotation.Autowired;
+import my.home.jnom.service.StreetService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,38 +15,31 @@ import java.util.UUID;
 
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/rest")
-public class MyRestController {
-    @Autowired
-    private CityDAO cityDAO;
+public class JnomRestController {
 
-    @Autowired
-    private StreetDAO streetDAO;
-
-    @Autowired
-    private HouseDAO houseDAO;
-
-    @Autowired
+    private CityService cityService;
+    private StreetService streetService;
+    private HouseService houseService;
     private ImportDataService importDataService;
 
     @GetMapping("/cities")
     public List<CityEntity> getCities(@RequestParam(value="q") String query) {
-        return cityDAO.findCities(query);
+        return cityService.findCities(query);
     }
 
     @GetMapping("/streets")
     public List<StreetEntity> getStreets(@RequestParam(value="cityId") Long cityId,
                                          @RequestParam(value="q") String query) {
-        List<StreetEntity> result = streetDAO.findStreetsFormatName(cityId, query);
-
-        return result;
+        return streetService.findStreetsAndFormatName(cityId, query);
     }
 
     @GetMapping("/houses")
     public List<HouseEntity> getHouses( @RequestParam(value="cityOsmId") Long cityOsmId,
                                        @RequestParam(value="streetId") UUID streetId,
                                        @RequestParam(value="q") String query) {
-        List<HouseEntity> result = houseDAO.findHouses(cityOsmId, streetId, query);
+        List<HouseEntity> result = houseService.findHouses(cityOsmId, streetId, query);
 
         return result;
     }

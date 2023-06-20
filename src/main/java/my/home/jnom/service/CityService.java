@@ -1,23 +1,19 @@
 package my.home.jnom.service;
 
+import lombok.AllArgsConstructor;
 import my.home.jnom.dao.jnom.AdmBoundaryDAO;
 import my.home.jnom.dao.jnom.CityDAO;
 import my.home.jnom.dao.osm.OsmPolygonDAO;
 import my.home.jnom.entity.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class CityDataService {
-    @Autowired
+@AllArgsConstructor
+public class CityService {
     private AdmBoundaryDAO admBoundaryDAO;
-
-    @Autowired
     private OsmPolygonDAO osmPolygonDAO;
-
-    @Autowired
     private CityDAO cityDAO;
 
     public void importCities() {
@@ -30,5 +26,9 @@ public class CityDataService {
             }
             cityDAO.insertOfUpdate(city);
         });
+    }
+
+    public List<CityEntity> findCities(String query) {
+        return cityDAO.findCities(query);
     }
 }

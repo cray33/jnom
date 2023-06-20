@@ -1,5 +1,6 @@
 package my.home.jnom.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import my.home.jnom.dao.jnom.AdmBoundaryDAO;
 import my.home.jnom.dao.jnom.CityDAO;
@@ -8,27 +9,18 @@ import my.home.jnom.dao.jnom.StreetDAO;
 import my.home.jnom.dao.osm.OsmPolygonDAO;
 import my.home.jnom.entity.HouseEntity;
 import my.home.jnom.entity.StreetEntity;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Slf4j
 @Service
-public class HouseDataService {
-    @Autowired
+@AllArgsConstructor
+public class HouseService {
     private HouseDAO houseDAO;
-
-    @Autowired
     private OsmPolygonDAO osmPolygonDAO;
-
-    @Autowired
     private AdmBoundaryDAO admBoundaryDAO;
-
-    @Autowired
     private CityDAO cityDAO;
-
-    @Autowired
     private StreetDAO streetDAO;
 
     public void importHouses() {
@@ -61,6 +53,10 @@ public class HouseDataService {
             houseDAO.insertOfUpdate(house);
 
         }
+    }
+
+    public List<HouseEntity> findHouses(Long cityOsmId, UUID streetId, String query) {
+        return houseDAO.findHouses(cityOsmId, streetId, query);
     }
 
     private Optional<UUID> findStreet(Long admBoundaryOsmId, Long cityOsmId, String streetName) {

@@ -1,7 +1,7 @@
 package my.home.jnom.dao.jnom;
 
+import lombok.AllArgsConstructor;
 import my.home.jnom.entity.CityEntity;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -9,8 +9,8 @@ import java.util.List;
 
 
 @Repository
+@AllArgsConstructor
 public class CityDAO {
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public List<Long> findAllOsmIds() {
@@ -46,13 +46,13 @@ public class CityDAO {
         return jdbcTemplate.query("SELECT osm_id, adm_boundary_osm_id, " +
                 " name, lat, lon \n" +
                 " FROM jnom.city WHERE name ILIKE '%' || ? || '%'", (rs, i) -> {
-                    CityEntity entity = new CityEntity();
-                    entity.setOsmId(rs.getLong("osm_id"));
-                    entity.setAdmBoundaryOsmId(rs.getLong("adm_boundary_osm_id"));
-                    entity.setName(rs.getString("name"));
-                    entity.setLat(rs.getDouble("lat"));
-                    entity.setLon(rs.getDouble("lon"));
-                    return entity;
+                    return CityEntity.builder()
+                            .osmId(rs.getLong("osm_id"))
+                            .admBoundaryOsmId(rs.getLong("adm_boundary_osm_id"))
+                            .name(rs.getString("name"))
+                            .lat(rs.getDouble("lat"))
+                            .lon(rs.getDouble("lon"))
+                            .build();
                 }, query);
     }
 }

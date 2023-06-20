@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,6 +17,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.offset;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@Testcontainers
 public class OsmLineDAOTest extends DatabaseTest {
 
     @Autowired
@@ -23,12 +25,6 @@ public class OsmLineDAOTest extends DatabaseTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    @AfterEach
-    public void clear() {
-        jdbcTemplate.update("DELETE FROM osm.planet_osm_line");
-        jdbcTemplate.update("DELETE FROM osm.planet_osm_polygon");
-    }
 
     @Test
     public void testFindStreetsSuccess() {

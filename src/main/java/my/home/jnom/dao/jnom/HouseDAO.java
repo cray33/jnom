@@ -1,7 +1,7 @@
 package my.home.jnom.dao.jnom;
 
+import lombok.AllArgsConstructor;
 import my.home.jnom.entity.HouseEntity;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
+@AllArgsConstructor
 public class HouseDAO {
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public void insertOfUpdate(HouseEntity entity) {
@@ -50,15 +50,15 @@ public class HouseDAO {
                 " ORDER BY house_number ASC", new RowMapper<HouseEntity>() {
             @Override
             public HouseEntity mapRow(ResultSet rs, int i) throws SQLException {
-                HouseEntity dto = new HouseEntity();
-                dto.setOsmId(rs.getLong("osm_id"));
-                dto.setStreetId(UUID.fromString(rs.getString("street_id")));
-                dto.setCityOsmId(rs.getLong("city_osm_id"));
-                dto.setAdmBoundaryOsmId(rs.getLong("adm_boundary_osm_id"));
-                dto.setHouseNumber(rs.getString("house_number"));
-                dto.setLat(rs.getDouble("lat"));
-                dto.setLon(rs.getDouble("lon"));
-                return dto;
+                return HouseEntity.builder()
+                        .osmId(rs.getLong("osm_id"))
+                        .streetId(UUID.fromString(rs.getString("street_id")))
+                        .cityOsmId(rs.getLong("city_osm_id"))
+                        .admBoundaryOsmId(rs.getLong("adm_boundary_osm_id"))
+                        .houseNumber(rs.getString("house_number"))
+                        .lat(rs.getDouble("lat"))
+                        .lon(rs.getDouble("lon"))
+                        .build();
             }
         }, cityOsmId, streetId, query);
     }

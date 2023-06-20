@@ -7,4 +7,4 @@ RUN apt-get update \
 ARG OSM_FILE=*.pbf
 RUN mkdir -p /osm_pbf
 COPY ${OSM_FILE} /osm_pbf/osm.pbf
-COPY schema.sql /docker-entrypoint-initdb.d/
+COPY schema.sql /docker-entrypoint-initdb.d/schema.sql

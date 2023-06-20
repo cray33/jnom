@@ -1,7 +1,7 @@
 package my.home.jnom.dao.osm;
 
+import lombok.AllArgsConstructor;
 import my.home.jnom.entity.StreetEntity;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -12,11 +12,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+@AllArgsConstructor
 public class OsmLineDAO {
-    @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     public List<StreetEntity> findStreets() {
@@ -26,21 +24,21 @@ public class OsmLineDAO {
                 " ST_Length(way) as way_length \n" +
                 " FROM osm.planet_osm_line " +
                 " WHERE highway IS NOT null AND name IS NOT null", (rs, i) -> {
-            StreetEntity entity = new StreetEntity();
-            entity.setOsmId(rs.getLong("osm_id"));
-            entity.setName(rs.getString("name"));
-            entity.setLat(rs.getDouble("lat"));
-            entity.setLon(rs.getDouble("lon"));
-            entity.setWayLength(rs.getFloat("way_length"));
-            //entity.setWay((PGgeometry) rs.getObject("way"));
-            return entity;
+            return StreetEntity.builder()
+                    .osmId(rs.getLong("osm_id"))
+                    .name(rs.getString("name"))
+                    .lat(rs.getDouble("lat"))
+                    .lon(rs.getDouble("lon"))
+                    .wayLength(rs.getFloat("way_length"))
+                    //.way((PGgeometry) rs.getObject("way"));
+                    .build();
         });
     }
 
-    public Optional<Long> findCityForStreet(Long osmId, List<Long> cities) {
+    public Optional<Long> findCityForStreet(Long streetOsmId, List<Long> cities) {
         SqlParameterSource parameters = new MapSqlParameterSource()
                 .addValue("cities", cities)
-                .addValue("osmId", osmId);
+                .addValue("osmId", streetOsmId);
 
         List<Long> result = namedParameterJdbcTemplate.query("SELECT city.osm_id " +
                 " FROM osm.planet_osm_line street\n" +
@@ -51,14 +49,14 @@ public class OsmLineDAO {
         return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
     }
 
-    public Optional<Long> findAdmBoundaryForStreet(Long osmId, List<Long> admBoundaries) {
+    public Optional<Long> findAdmBoundaryForStreet(Long streetOsmId, List<Long> admBoundaries) {
         SqlParameterSource parameters = new MapSqlParameterSource()
                 .addValue("admBoundaries", admBoundaries)
-                .addValue("osmId", osmId);
+                .addValue("osmId", streetOsmId);
 
         List<Long> result = namedParameterJdbcTemplate.query("SELECT adm.osm_id " +
                 " FROM osm.planet_osm_line street\n" +
-                " INNER JOIN osm.planet_osm_polygon adm on ST_Within(street.way, adm.way) or ST_Crosses(street.way, adm.way)\n" +
+                " INNER JOIN osm.planet_osm_polygon adm ON ST_Within(street.way, adm.way) OR ST_Crosses(street.way, adm.way)\n" +
                 " WHERE street.osm_id = :osmId AND adm.osm_id IN (:admBoundaries) \n" +
                 " ORDER BY adm.admin_level DESC " +
                 " LIMIT 1", parameters, (rs, rowNum) -> rs.getLong("osm_id"));

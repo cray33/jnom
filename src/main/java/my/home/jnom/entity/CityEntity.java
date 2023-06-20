@@ -1,5 +1,6 @@
 package my.home.jnom.entity;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.postgis.PGgeometry;
@@ -9,6 +10,7 @@ import java.util.Map;
 
 @Getter
 @Setter
+@Builder
 public class CityEntity {
     private Long osmId;
     private String name;

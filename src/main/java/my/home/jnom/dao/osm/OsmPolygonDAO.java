@@ -1,10 +1,10 @@
 package my.home.jnom.dao.osm;
 
+import lombok.AllArgsConstructor;
 import my.home.jnom.entity.AdmBoundaryEntity;
 import my.home.jnom.entity.CityEntity;
 import my.home.jnom.entity.HouseEntity;
 import org.postgis.PGgeometry;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -16,11 +16,9 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
+@AllArgsConstructor
 public class OsmPolygonDAO {
-    @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     public List<AdmBoundaryEntity> findAdmBoundaries(Integer adminLevel) {
@@ -29,15 +27,15 @@ public class OsmPolygonDAO {
                 " ST_Y(ST_Transform (ST_Centroid(way), 4326)) AS lat \n" +
                 " FROM osm.planet_osm_polygon " +
                 " WHERE boundary = 'administrative' AND admin_level = ?", (rs, i) -> {
-                    AdmBoundaryEntity entity = new AdmBoundaryEntity();
-                    entity.setOsmId(rs.getLong("osm_id"));
-                    entity.setName(rs.getString("name"));
-                    entity.setTags((Map<String, String>)(rs.getObject("tags")));
-                    entity.setAdminLevel(Integer.parseInt(rs.getString("admin_level")));
-                    entity.setLat(rs.getDouble("lat"));
-                    entity.setLon(rs.getDouble("lon"));
-                    entity.setWay((PGgeometry) rs.getObject("way"));
-                    return entity;
+                    return AdmBoundaryEntity.builder()
+                            .osmId(rs.getLong("osm_id"))
+                            .name(rs.getString("name"))
+                            .tags((Map<String, String>)(rs.getObject("tags")))
+                            .adminLevel(Integer.parseInt(rs.getString("admin_level")))
+                            .lat(rs.getDouble("lat"))
+                            .lon(rs.getDouble("lon"))
+                            .way((PGgeometry) rs.getObject("way"))
+                            .build();
                 }, String.valueOf(adminLevel));
     }
 
@@ -73,17 +71,17 @@ public class OsmPolygonDAO {
                 " ST_Y(ST_Transform (ST_Centroid(way), 4326)) AS lat " +
                 " FROM osm.planet_osm_polygon" +
                 " WHERE place IN ('city', 'town', 'village', 'hamlet')", (rs, rowNum) -> {
-                    CityEntity entity = new CityEntity();
-                    entity.setOsmId(rs.getLong("osm_id"));
-                    entity.setName(rs.getString("name"));
-                    entity.setTags((Map<String, String>)(rs.getObject("tags")));
-                    entity.setPopulation(rs.getInt("population"));
-                    entity.setLat(rs.getDouble("lat"));
-                    entity.setLon(rs.getDouble("lon"));
-                    entity.setWayArea(rs.getFloat("way_area"));
-                    entity.setWay((PGgeometry) rs.getObject("way"));
-                    return entity;
-                });
+            return CityEntity.builder()
+                    .osmId(rs.getLong("osm_id"))
+                    .name(rs.getString("name"))
+                    .tags((Map<String, String>) (rs.getObject("tags")))
+                    .population(rs.getInt("population"))
+                    .lat(rs.getDouble("lat"))
+                    .lon(rs.getDouble("lon"))
+                    .wayArea(rs.getFloat("way_area"))
+                    .way((PGgeometry) rs.getObject("way"))
+                    .build();
+        });
     }
 
     public List<HouseEntity> findHouses() {
@@ -93,13 +91,13 @@ public class OsmPolygonDAO {
                 " FROM osm.planet_osm_polygon" +
                 " WHERE building IS NOT null AND \"addr:housenumber\" IS NOT null " +
                 " AND  tags -> 'addr:street' IS NOT null ", (rs, rowNum) -> {
-            HouseEntity entity = new HouseEntity();
-            entity.setOsmId(rs.getLong("osm_id"));
-            entity.setHouseNumber(rs.getString("addr:housenumber"));
-            entity.setTags((Map<String, String>)(rs.getObject("tags")));
-            entity.setLat(rs.getDouble("lat"));
-            entity.setLon(rs.getDouble("lon"));
-            return entity;
+            return HouseEntity.builder()
+                    .osmId(rs.getLong("osm_id"))
+                    .houseNumber(rs.getString("addr:housenumber"))
+                    .tags((Map<String, String>)(rs.getObject("tags")))
+                    .lat(rs.getDouble("lat"))
+                    .lon(rs.getDouble("lon"))
+                    .build();
         });
     }
 }

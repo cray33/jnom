@@ -1,5 +1,6 @@
 package my.home.jnom.dao.jnom;
 
+import lombok.AllArgsConstructor;
 import my.home.jnom.entity.StreetEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -13,8 +14,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
+@AllArgsConstructor
 public class StreetDAO {
-    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public void insertOfUpdate(StreetEntity entity) {
@@ -41,40 +42,41 @@ public class StreetDAO {
     }
 
     public List<StreetEntity> findStreets(Long cityOsmId, String streetName) {
-        return jdbcTemplate.query("SELECT id, osm_id, name, adm_boundary_osm_id, city_osm_id, lat, lon \n" +
+        return jdbcTemplate.query("SELECT * \n" +
                 " FROM jnom.street " +
                 " WHERE city_osm_id = ? AND name = ? " +
-                " LIMIT 1", (rs, i) -> {
-                    StreetEntity entity = new StreetEntity(UUID.fromString(rs.getString("id")));
-                    entity.setOsmId(rs.getLong("osm_id"));
-                    entity.setCityOsmId(rs.getLong("city_osm_id"));
-                    entity.setName(rs.getString("name"));
-                    entity.setLat(rs.getDouble("lat"));
-                    entity.setLon(rs.getDouble("lon"));
-                    //entity.setWay((PGgeometry) rs.getObject("way"));
-                    entity.setConsistOfOsmIds(Arrays.asList((Long[]) rs.getArray("consist_of").getArray()));
-                    return entity;
-                }, cityOsmId, streetName);
+                " LIMIT 1", new StreetRowMapper(), cityOsmId, streetName);
     }
 
-    public List<StreetEntity> findStreetsFormatName(Long cityId, String query) {
-        return jdbcTemplate.query("SELECT street.id AS id, street.osm_id, street.name || ' (' || adm.name || ')' as name, street.city_osm_id, " +
-                " street.lat, street.lon \n" +
+    public List<StreetEntity> findStreetsAndFormatName(Long cityId, String query) {
+        return jdbcTemplate.query("SELECT street.*, street.name || ' (' || adm.name || ')' as name " +
                 " FROM jnom.street street" +
                 " INNER JOIN jnom.administrative_boundary adm ON street.adm_boundary_osm_id = adm.osm_id" +
                 " WHERE street.city_osm_id = ? " +
                 " AND street.name ILIKE '%' || ? || '%'" +
-                " ORDER BY street.name ASC", new RowMapper<StreetEntity>() {
-            @Override
-            public StreetEntity mapRow(ResultSet rs, int i) throws SQLException {
-                StreetEntity dto = new StreetEntity(UUID.fromString(rs.getString("id")));
-                dto.setOsmId(rs.getLong("osm_id"));
-                dto.setCityOsmId(rs.getLong("city_osm_id"));
-                dto.setName(rs.getString("name"));
-                dto.setLat(rs.getDouble("lat"));
-                dto.setLon(rs.getDouble("lon"));
-                return dto;
-            }
-        }, cityId, query);
+                " ORDER BY street.name ASC", new StreetRowMapper(), cityId, query);
+    }
+
+    public List<StreetEntity> findAll() {
+        return jdbcTemplate.query("SELECT * FROM jnom.street", new StreetRowMapper());
+    }
+
+    class StreetRowMapper implements RowMapper<StreetEntity> {
+
+        @Override
+        public StreetEntity mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return StreetEntity.builder()
+                    .id(UUID.fromString(rs.getString("id")))
+                    .osmId(rs.getLong("osm_id"))
+                    .name(rs.getString("name"))
+                    .admBoundaryOsmId(rs.getLong("adm_boundary_osm_id"))
+                    .cityOsmId(rs.getLong("city_osm_id"))
+                    .lat(rs.getDouble("lat"))
+                    .lon(rs.getDouble("lon"))
+                    .wayLength(rs.getFloat("way_length"))
+                    //.way((PGgeometry) rs.getObject("way"));
+                    .consistOfOsmIds(Arrays.asList((Long[]) rs.getArray("consist_of").getArray()))
+                    .build();
+        }
     }
 }
